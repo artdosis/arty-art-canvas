@@ -39,13 +39,13 @@ function Hero() {
       const dd = brush.dims();
       const centerX = cx ?? dd.w * 0.5;
       const centerY = cy ?? dd.h * 0.46;
-      // Keep paint clustered around the wordmark, not across the whole screen.
-      const spreadX = big ? dd.w * 0.13 : dd.w * 0.07;
-      const spreadY = big ? dd.h * 0.11 : dd.h * 0.06;
+      // Keep paint tightly clustered around the wordmark.
+      const spreadX = big ? dd.w * 0.09 : dd.w * 0.05;
+      const spreadY = big ? dd.h * 0.07 : dd.h * 0.04;
       let x = centerX + (Math.random() - 0.5) * spreadX * 2;
       let y = centerY + (Math.random() - 0.5) * spreadY * 2;
       let ang = Math.random() * 6.283;
-      const step = (big ? dd.w * 0.09 : dd.w * 0.05) * (0.7 + Math.random() * 0.8);
+      const step = (big ? dd.w * 0.06 : dd.w * 0.035) * (0.7 + Math.random() * 0.8);
       const n = 2 + ((Math.random() * 3) | 0);
       const pts = [{ x, y }];
       for (let i = 0; i < n; i++) {
@@ -54,7 +54,7 @@ function Hero() {
         y += Math.sin(ang) * step * 0.82;
         pts.push({ x, y });
       }
-      brush.paintPath(pts, undefined, 22 + Math.random() * 26);
+      brush.paintPath(pts, undefined, 18 + Math.random() * 22);
     };
 
     const paintScene = () => {
