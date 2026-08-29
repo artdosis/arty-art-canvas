@@ -157,11 +157,10 @@ text-shadow:0 1px 0 rgba(247,242,234,.5);}
 background:radial-gradient(ellipse 46% 30% at 50% 46%, transparent 0%, transparent 28%, rgba(0,0,0,.55) 56%, #000 100%);}
 .hero__in{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:22px;padding-block:100px;pointer-events:none;}
 .hero__in a,.hero__in .mark{pointer-events:auto;}
-/* wordmark: painted backdrop cropped through the letters */
-.mark{position:relative;display:inline-block;margin:0;font-weight:800;cursor:default;line-height:.82;padding-inline:.06em;overflow:visible;}
-.mark__ghost{display:block;font-weight:800;font-family:var(--f-display);font-size:clamp(3.2rem,17vw,12.5rem);letter-spacing:-.04em;
-text-align:center;color:transparent;visibility:hidden;}
-.mark__canvas{position:absolute;inset:-4% -2%;width:104%;height:108%;display:block;pointer-events:none;filter:saturate(1.45) contrast(1.18) brightness(1.02);}
+/* wordmark: solid white, high contrast over the painted backdrop */
+.mark{position:relative;display:inline-block;margin:0;font-weight:800;cursor:default;line-height:.82;padding-inline:.06em;overflow:visible;
+font-family:var(--f-display);font-size:clamp(3.2rem,17vw,12.5rem);letter-spacing:-.04em;text-align:center;color:#fff;
+text-shadow:0 2px 18px rgba(0,0,0,.55),0 0 0 rgba(0,0,0,.25);}
 
 .hero__eye{opacity:.72;}
 .hero__sub{max-width:46ch;font-size:clamp(1.15rem,1rem + .8vw,1.45rem);line-height:1.55;color:var(--text-2);}

@@ -26,9 +26,6 @@ export const Route = createFileRoute("/")({
 
 function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const markRef = useRef<HTMLHeadingElement>(null);
-  const markCanvasRef = useRef<HTMLCanvasElement>(null);
-  const ghostRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const c = canvasRef.current;
@@ -78,59 +75,12 @@ function Hero() {
 
     paintScene();
 
-    // The wordmark is a cut-out of the paint layer: whatever colour is behind
-    // the letters passes straight through them.
-    const mc = markCanvasRef.current;
-    const mctx = mc?.getContext("2d") ?? null;
-    const drawMark = () => {
-      const ghost = ghostRef.current;
-      if (!mc || !mctx || !ghost) return;
-      const r = mc.getBoundingClientRect();
-      if (!r.width || !r.height) return;
-      const dpr = Math.min(devicePixelRatio || 1, 2);
-      const pw = (r.width * dpr) | 0;
-      const ph = (r.height * dpr) | 0;
-      if (mc.width !== pw || mc.height !== ph) {
-        mc.width = pw;
-        mc.height = ph;
-      }
-      const cs = getComputedStyle(ghost);
-      mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      mctx.clearRect(0, 0, r.width, r.height);
-
-      const hr = c.getBoundingClientRect();
-      const sx = (r.left - hr.left) * (c.width / (hr.width || 1));
-      const sy = (r.top - hr.top) * (c.height / (hr.height || 1));
-      const sw = r.width * (c.width / (hr.width || 1));
-      const sh = r.height * (c.height / (hr.height || 1));
-      mctx.globalCompositeOperation = "source-over";
-      mctx.drawImage(c, sx, sy, sw, sh, 0, 0, r.width, r.height);
-
-      mctx.font = `${cs.fontWeight} ${parseFloat(cs.fontSize)}px ${cs.fontFamily}`;
-      if ("letterSpacing" in mctx) (mctx as unknown as { letterSpacing: string }).letterSpacing = cs.letterSpacing;
-      mctx.textAlign = "center";
-      mctx.textBaseline = "middle";
-      const tx = r.width / 2;
-      const ty = r.height / 2;
-      mctx.globalCompositeOperation = "destination-in";
-      mctx.fillStyle = "#000";
-      mctx.fillText("ARTDOSIS", tx, ty);
-
-      mctx.globalCompositeOperation = "destination-over";
-      mctx.fillStyle = "#F7F2EA";
-      mctx.fillText("ARTDOSIS", tx, ty);
-      mctx.globalCompositeOperation = "source-over";
-    };
-
     const onResize = () => {
       brush.resize();
       paintScene();
-      drawMark();
     };
 
-    drawMark();
     addEventListener("resize", onResize);
-    if (document.fonts?.ready) document.fonts.ready.then(drawMark).catch(() => {});
 
     return () => {
       removeEventListener("resize", onResize);
@@ -145,11 +95,8 @@ function Hero() {
       <div className="hero__vignette" aria-hidden="true" />
       <div className="wrap hero__in">
         <p className="eyebrow hero__eye">Melbourne · Art and human wellbeing</p>
-        <h1 className="mark" ref={markRef} aria-label="Artdosis">
-          <span className="mark__ghost" ref={ghostRef} aria-hidden="true">
-            ARTDOSIS
-          </span>
-          <canvas className="mark__canvas" ref={markCanvasRef} aria-hidden="true" />
+        <h1 className="mark" aria-label="Artdosis">
+          ARTDOSIS
         </h1>
         <p className="hero__sub">
           Art is something that happens to you. A dose of emotion, culture and connection, felt through painting, murals, music and the
