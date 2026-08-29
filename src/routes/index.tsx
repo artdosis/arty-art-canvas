@@ -345,14 +345,14 @@ function Home() {
         </div>
       </section>
 
-      <section className="section bg-ink">
+      <section className="section bg-awakening">
         <div className="wrap split reveal">
           <div className="stack">
-            <p className="eyebrow" style={{ color: "var(--yellow)" }}>
+            <p className="eyebrow" style={{ color: "var(--terracotta)" }}>
               The experience · December 2026
             </p>
-            <h2 style={{ fontSize: "clamp(3rem,8vw,6rem)", letterSpacing: "-.03em" }}>Awakening</h2>
-            <p className="body-2" style={{ color: "rgba(247,242,234,.72)" }}>
+            <h2 style={{ fontSize: "clamp(3rem,8vw,6rem)", letterSpacing: "-.03em", color: "var(--ink)" }}>Awakening</h2>
+            <p className="body-2" style={{ color: "var(--graphite)" }}>
               Angi Castillo’s first solo exhibition. An immersive journey through art, ancestry, movement and sound that wakes up all five
               senses. Step outside the ordinary.
             </p>
