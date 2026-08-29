@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, type CSSProperties } from "react";
-import { makeBrush, prefersReduced } from "@/lib/paint";
+import { makeBrush } from "@/lib/paint";
 import { SheetForm } from "@/components/SheetForm";
 import { SERVICE_IMG, SHOP_IMG, AWAKENING_IMG } from "@/lib/images";
 import { balancedStyle } from "@/lib/grid";
@@ -33,44 +33,53 @@ function Hero() {
   useEffect(() => {
     const c = canvasRef.current;
     if (!c) return;
-    const reduce = prefersReduced();
     const brush = makeBrush(c);
-    let running = true;
-    let raf = 0;
-    let prevT = performance.now();
-    let idle = 0;
 
-    const gesture = (big: boolean) => {
+    const gesture = (big: boolean, cx?: number, cy?: number) => {
       const dd = brush.dims();
-      let x = dd.w * (0.08 + Math.random() * 0.84);
-      let y = dd.h * (0.12 + Math.random() * 0.74);
+      const centerX = cx ?? dd.w * 0.5;
+      const centerY = cy ?? dd.h * 0.46;
+      // Keep paint tightly clustered around the wordmark.
+      const spreadX = big ? dd.w * 0.08 : dd.w * 0.045;
+      const spreadY = big ? dd.h * 0.06 : dd.h * 0.035;
+      const box = {
+        minX: centerX - dd.w * 0.22,
+        maxX: centerX + dd.w * 0.22,
+        minY: centerY - dd.h * 0.11,
+        maxY: centerY + dd.h * 0.11,
+      };
+      let x = centerX + (Math.random() - 0.5) * spreadX * 2;
+      let y = centerY + (Math.random() - 0.5) * spreadY * 2;
       let ang = Math.random() * 6.283;
-      const step = (big ? dd.w * 0.16 : dd.w * 0.09) * (0.7 + Math.random() * 0.8);
-      const n = 3 + ((Math.random() * 3) | 0);
+      const step = (big ? dd.w * 0.05 : dd.w * 0.03) * (0.7 + Math.random() * 0.8);
+      const n = 2 + ((Math.random() * 3) | 0);
       const pts = [{ x, y }];
       for (let i = 0; i < n; i++) {
         ang += (Math.random() - 0.5) * 1.15;
         x += Math.cos(ang) * step;
         y += Math.sin(ang) * step * 0.82;
+        x = Math.max(box.minX, Math.min(box.maxX, x));
+        y = Math.max(box.minY, Math.min(box.maxY, y));
         pts.push({ x, y });
       }
-      brush.paintPath(pts, undefined, 26 + Math.random() * 30);
+      brush.paintPath(pts, undefined, 16 + Math.random() * 20);
     };
 
-    for (let i = 0; i < 7; i++) gesture(i < 2);
-
-    // Listen on the whole hero so strokes keep flowing across the wordmark too.
-    const host = (c.closest(".hero") as HTMLElement | null) ?? c.parentElement!;
-    const onPointer = (e: PointerEvent) => brush.move(e.clientX, e.clientY);
-    const onTouch = (e: TouchEvent) => {
-      const t = e.touches[0];
-      if (t) brush.move(t.clientX, t.clientY);
+    const paintScene = () => {
+      const ctx = c.getContext("2d");
+      if (!ctx) return;
+      const { w, h } = brush.dims();
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 10; i++) {
+        gesture(i < 4, w * 0.5, h * 0.46);
+      }
     };
-    host.addEventListener("pointermove", onPointer, { passive: true });
-    host.addEventListener("touchmove", onTouch, { passive: true });
 
-    // The wordmark is a live cut-out of the paint layer: whatever colour is on
-    // the brush passes straight through the letters.
+    paintScene();
+
+    // The wordmark is a cut-out of the paint layer: whatever colour is behind
+    // the letters passes straight through them.
     const mc = markCanvasRef.current;
     const mctx = mc?.getContext("2d") ?? null;
     const drawMark = () => {
@@ -89,7 +98,6 @@ function Hero() {
       mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       mctx.clearRect(0, 0, r.width, r.height);
 
-      // 1. paint layer, cropped to the wordmark box
       const hr = c.getBoundingClientRect();
       const sx = (r.left - hr.left) * (c.width / (hr.width || 1));
       const sy = (r.top - hr.top) * (c.height / (hr.height || 1));
@@ -98,7 +106,6 @@ function Hero() {
       mctx.globalCompositeOperation = "source-over";
       mctx.drawImage(c, sx, sy, sw, sh, 0, 0, r.width, r.height);
 
-      // 2. keep only what falls inside the letters
       mctx.font = `${cs.fontWeight} ${parseFloat(cs.fontSize)}px ${cs.fontFamily}`;
       if ("letterSpacing" in mctx) (mctx as unknown as { letterSpacing: string }).letterSpacing = cs.letterSpacing;
       mctx.textAlign = "center";
@@ -109,57 +116,33 @@ function Hero() {
       mctx.fillStyle = "#000";
       mctx.fillText("ARTDOSIS", tx, ty);
 
-      // 3. ivory ink underneath so the name reads white on the black canvas
-      // before any colour lands inside the letters
       mctx.globalCompositeOperation = "destination-over";
       mctx.fillStyle = "#F7F2EA";
       mctx.fillText("ARTDOSIS", tx, ty);
       mctx.globalCompositeOperation = "source-over";
-
     };
-
-    let io: IntersectionObserver | undefined;
-    io = new IntersectionObserver((en) => en.forEach((x) => (running = x.isIntersecting)), { threshold: 0.05 });
-    io.observe(c);
-    const loop = (now: number) => {
-      const dt = Math.min(now - prevT, 80);
-      prevT = now;
-      if (running) {
-        if (!reduce) {
-          idle += dt;
-          if (idle > 1500) {
-            idle = 0;
-            gesture(Math.random() < 0.3);
-          }
-        }
-        drawMark();
-      }
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
 
     const onResize = () => {
       brush.resize();
+      paintScene();
       drawMark();
     };
+
+    drawMark();
     addEventListener("resize", onResize);
     if (document.fonts?.ready) document.fonts.ready.then(drawMark).catch(() => {});
 
     return () => {
-      cancelAnimationFrame(raf);
-      io?.disconnect();
       removeEventListener("resize", onResize);
-      host.removeEventListener("pointermove", onPointer);
-      host.removeEventListener("touchmove", onTouch);
     };
   }, []);
 
   return (
-    <section className="hero">
+    <section className="hero hero--static">
       <div className="hero__canvas">
         <canvas ref={canvasRef} aria-hidden="true" />
       </div>
-      <div className="hero__halo" aria-hidden="true" />
+      <div className="hero__vignette" aria-hidden="true" />
       <div className="wrap hero__in">
         <p className="eyebrow hero__eye">Melbourne · Art and human wellbeing</p>
         <h1 className="mark" ref={markRef} aria-label="Artdosis">
@@ -183,7 +166,6 @@ function Hero() {
             See the work
           </Link>
         </div>
-        <p className="hero__hint">Move to paint · touch to paint · paint straight across the name</p>
       </div>
       <div className="hero__scroll" aria-hidden="true">
         <span>Scroll</span>
@@ -375,7 +357,7 @@ function Home() {
         </div>
       </section>
 
-      <section className="section bg-aubergine band">
+      <section className="section band band--gradient">
         <div className="narrow reveal">
           <p className="band__q serif" style={{ fontStyle: "italic" }}>
             Humans are not depressed. They are disconnected from the creator within. Art is what remains when the body is gone.
