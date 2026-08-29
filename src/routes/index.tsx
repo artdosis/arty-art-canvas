@@ -40,21 +40,29 @@ function Hero() {
       const centerX = cx ?? dd.w * 0.5;
       const centerY = cy ?? dd.h * 0.46;
       // Keep paint tightly clustered around the wordmark.
-      const spreadX = big ? dd.w * 0.09 : dd.w * 0.05;
-      const spreadY = big ? dd.h * 0.07 : dd.h * 0.04;
+      const spreadX = big ? dd.w * 0.08 : dd.w * 0.045;
+      const spreadY = big ? dd.h * 0.06 : dd.h * 0.035;
+      const box = {
+        minX: centerX - dd.w * 0.22,
+        maxX: centerX + dd.w * 0.22,
+        minY: centerY - dd.h * 0.11,
+        maxY: centerY + dd.h * 0.11,
+      };
       let x = centerX + (Math.random() - 0.5) * spreadX * 2;
       let y = centerY + (Math.random() - 0.5) * spreadY * 2;
       let ang = Math.random() * 6.283;
-      const step = (big ? dd.w * 0.06 : dd.w * 0.035) * (0.7 + Math.random() * 0.8);
+      const step = (big ? dd.w * 0.05 : dd.w * 0.03) * (0.7 + Math.random() * 0.8);
       const n = 2 + ((Math.random() * 3) | 0);
       const pts = [{ x, y }];
       for (let i = 0; i < n; i++) {
         ang += (Math.random() - 0.5) * 1.15;
         x += Math.cos(ang) * step;
         y += Math.sin(ang) * step * 0.82;
+        x = Math.max(box.minX, Math.min(box.maxX, x));
+        y = Math.max(box.minY, Math.min(box.maxY, y));
         pts.push({ x, y });
       }
-      brush.paintPath(pts, undefined, 18 + Math.random() * 22);
+      brush.paintPath(pts, undefined, 16 + Math.random() * 20);
     };
 
     const paintScene = () => {
