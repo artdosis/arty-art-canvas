@@ -36,30 +36,33 @@ function Hero() {
       const dd = brush.dims();
       const centerX = cx ?? dd.w * 0.5;
       const centerY = cy ?? dd.h * 0.46;
-      // Spread paint across the full wordmark area so it reads as a textured backdrop.
-      const spreadX = big ? dd.w * 0.13 : dd.w * 0.075;
-      const spreadY = big ? dd.h * 0.09 : dd.h * 0.055;
-      const box = {
-        minX: centerX - dd.w * 0.28,
-        maxX: centerX + dd.w * 0.28,
-        minY: centerY - dd.h * 0.15,
-        maxY: centerY + dd.h * 0.15,
-      };
-      let x = centerX + (Math.random() - 0.5) * spreadX * 2;
-      let y = centerY + (Math.random() - 0.5) * spreadY * 2;
+      // Elliptical backdrop that covers the full wordmark area.
+      const rx = big ? dd.w * 0.34 : dd.w * 0.3;
+      const ry = big ? dd.h * 0.2 : dd.h * 0.17;
+      const theta = Math.random() * 6.283;
+      const r = Math.sqrt(Math.random()); // uniform fill inside ellipse
+      let x = centerX + rx * r * Math.cos(theta);
+      let y = centerY + ry * r * Math.sin(theta);
       let ang = Math.random() * 6.283;
-      const step = (big ? dd.w * 0.055 : dd.w * 0.035) * (0.7 + Math.random() * 0.8);
-      const n = 3 + ((Math.random() * 4) | 0);
+      const step = (big ? dd.w * 0.06 : dd.w * 0.04) * (0.7 + Math.random() * 0.9);
+      const n = 4 + ((Math.random() * 5) | 0);
       const pts = [{ x, y }];
       for (let i = 0; i < n; i++) {
-        ang += (Math.random() - 0.5) * 1.25;
+        ang += (Math.random() - 0.5) * 1.35;
         x += Math.cos(ang) * step;
         y += Math.sin(ang) * step * 0.82;
-        x = Math.max(box.minX, Math.min(box.maxX, x));
-        y = Math.max(box.minY, Math.min(box.maxY, y));
+        // Keep strokes within the elliptical bounds.
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const dist = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+        if (dist > 1) {
+          const scale = 0.92 / Math.sqrt(dist);
+          x = centerX + dx * scale;
+          y = centerY + dy * scale;
+        }
         pts.push({ x, y });
       }
-      brush.paintPath(pts, undefined, 18 + Math.random() * 22);
+      brush.paintPath(pts, undefined, 20 + Math.random() * 26);
     };
 
     const paintScene = () => {
@@ -68,8 +71,8 @@ function Hero() {
       const { w, h } = brush.dims();
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, w, h);
-      for (let i = 0; i < 28; i++) {
-        gesture(i < 12, w * 0.5, h * 0.46);
+      for (let i = 0; i < 70; i++) {
+        gesture(i < 28, w * 0.5, h * 0.46);
       }
     };
 
